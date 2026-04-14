@@ -1,0 +1,12 @@
+*.jou
+*.log
+*.pb
+*.wdb
+*.vcd
+*.str
+.Xil/
+sim/
+*.sim/
+*.cache/
+*.hw/
+*.ip_user_files/
