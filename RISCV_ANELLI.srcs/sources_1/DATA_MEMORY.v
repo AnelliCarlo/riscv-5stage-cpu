@@ -18,10 +18,10 @@ module DATA_MEMORY #(
     output reg [`DATA_WIDTH-1:0] mem_data
 );
 
-    // Array di memoria: RAM_SIZE locazioni da 8 bit (1 Byte) ciascuna
+    // Memory array: RAM_SIZE locations of 8 bits (1 Byte) each
     reg [7:0] ram [0:RAM_SIZE-1];
 
-    // Variabile di appoggio per limitare l'indirizzo alla dimensione fisica della RAM
+    // Helper wire to limit the address to the physical size of the RAM
     wire [31:0] eff_addr;
     assign eff_addr = address % RAM_SIZE;
 
@@ -30,7 +30,7 @@ module DATA_MEMORY #(
     // -----------------------------------------------------------------
     always @(posedge clk) begin
         if (mem_we) begin
-            // 2'b00 = Byte (8 bit), 2'b01 = Half-Word (16 bit), 2'b10 = Word (32 bit)
+            // 2'b00 = Byte (8 bits), 2'b01 = Half-Word (16 bits), 2'b10 = Word (32 bits)
             if (mem_dim == 2'b00) begin
                 ram[eff_addr] <= write_data[7:0];
             end
@@ -51,7 +51,7 @@ module DATA_MEMORY #(
     // READ LOGIC (Asynchronous / Combinational)
     // -----------------------------------------------------------------
     always @(*) begin
-        mem_data = 32'b0; // Default per evitare latch
+        mem_data = 32'b0; // Default value to avoid latches
 
         if (mem_re) begin
             case (mem_dim)

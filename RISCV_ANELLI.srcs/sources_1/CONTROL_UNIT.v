@@ -7,7 +7,7 @@ module CONTROL_UNIT(
     input wire [`FUNCT3_WIDTH-1:0] funct3,
     input wire funct7_5,           // Instruction bit [30] (for ADD/SUB, SRL/SRA distinction)
     
-    // --- ALU/Branch Comparison Inputs ---
+    // --- Branch Comparison Inputs ---
     input wire equal,             // rs1 == rs2
     input wire signed_less,       // input1 < input2 (Signed)
     input wire signed_greater,    // input1 > input2 (Signed)
@@ -34,7 +34,6 @@ module CONTROL_UNIT(
     output reg wb_sel_input     // MUX in WB: 0=EXE Result (ALU/PC+4), 1=Memory Data
 );
     
-    // Default Assignments
     always @(*) begin
         ALUOp           = `ALU_NOP;     // Default: No Operation
         ALUIn1          = 1'b0;         // Default: rs1_data
@@ -166,8 +165,8 @@ module CONTROL_UNIT(
             // 8. B-Type (Conditional Branch)
             `BTYPE: begin 
                 ALUOp  = `ALU_ADD;  
-                ALUIn1 = 1'b1;       
-                ALUIn2 = 1'b1;       
+                ALUIn1 = 1'b1;                // PC in ALU Input 1
+                ALUIn2 = 1'b1;                // Immediate in ALU Input 2
                 wb_we           = 1'b0;       // Do not write to RegFile
                 
                 // Branch condition resolution:

@@ -63,7 +63,6 @@ module ID(
     output wire [`DATA_WIDTH-1:0] dbg_x7,
     output wire [`DATA_WIDTH-1:0] dbg_x8
 
-
 );
 
     // Instruction fields
@@ -160,7 +159,6 @@ module ID(
     );
 
     // Control Unit
-    //wire branch_taken;
     CONTROL_UNIT control_unit_inst (
         .opcode(opcode),
         .funct3(funct3),

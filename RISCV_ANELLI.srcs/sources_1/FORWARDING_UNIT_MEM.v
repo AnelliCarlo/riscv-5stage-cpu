@@ -13,7 +13,6 @@ module FORWARDING_UNIT_MEM(
     output reg [`DATA_WIDTH-1:0] ForwardedData
 );
 
-
     always @(*) begin
         ForwardSel     = 1'b0;
         ForwardedData = 32'b0;

@@ -3,7 +3,6 @@
 `include "RISC-V.vh"
 
 module EXE(
-    // --- EXE Stage Inputs ---
     input wire [`DATA_WIDTH-1:0] pc_in,    
     input wire [`REG_ADDR_WIDTH-1:0] rs1,
     input wire [`REG_ADDR_WIDTH-1:0] rs2,
@@ -16,8 +15,6 @@ module EXE(
     input wire ALUIn2,
     input wire EXEOut, // 0: EXE_OUT_DATA = ALU, 1: EXE_OUT_DATA = PC + 4
 
-    
-    // Inputs from other pipeline stages
     input wire [`REG_ADDR_WIDTH-1:0] MEM_rd,
     input wire MEM_mem_re,
     input wire MEM_wb_we,
@@ -26,7 +23,6 @@ module EXE(
     input wire [`DATA_WIDTH-1:0] WB_data,
     input wire WB_wb_we,
     
-    // Outputs
     output reg [`DATA_WIDTH-1:0] rs2_data_out,
     output reg [`DATA_WIDTH-1:0] eo_data, // EXE_OUT_DATA
     output reg [`DATA_WIDTH-1:0] pc_jump // ALUOut
@@ -97,8 +93,6 @@ module EXE(
         .ALUOut(ALUOut)
     );
     
-    
-    // PC + 4 logic
     wire [`DATA_WIDTH-1:0] pc_plus_4;
     assign pc_plus_4 = pc_in + 4;
 
@@ -116,7 +110,6 @@ module EXE(
     // Output Connections
     // -----------------------------------------------------------------
     
-    // Assigning reg outputs inside an always block
     always @(*) begin
         rs2_data_out = rs2_data_fwd; // Send forwarded data, not the old one
         eo_data      = eo_data_wire;

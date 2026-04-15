@@ -5,7 +5,7 @@ module CORE (
     input wire clk,
     input wire rst,
     
-    // Initial PC value
+    // Initial PC value 
     input wire [`DATA_WIDTH-1:0] pc_start,
     
     // Debug outputs for registers
@@ -16,114 +16,102 @@ module CORE (
     output wire [`DATA_WIDTH-1:0] dbg_x5,
     output wire [`DATA_WIDTH-1:0] dbg_x6,
     output wire [`DATA_WIDTH-1:0] dbg_x7,
-    output wire [`DATA_WIDTH-1:0] dbg_x8,
-    
-    output reg [`DATA_WIDTH-1:0] instruction_if_id,
-    output reg [`DATA_WIDTH-1:0] pc_if_id,
-    output wire                   id_branch_taken,
-    output wire [`DATA_WIDTH-1:0] exe_pc_jump,
-    output wire [1:0]             id_pc_sel,
-    output reg [`DATA_WIDTH-1:0] immediate_id_exe,
-    output reg [`DATA_WIDTH-1:0] pc_id_exe,
-    output wire                   if_pc_jump_taken,
-    output wire                   id_stall
-
+    output wire [`DATA_WIDTH-1:0] dbg_x8 
 );
 
     // ========================================================================
     // Pipeline Registers Declarations
     // ========================================================================
 
-    // IF/ID Stage
-    
-    
-    
-    reg                   pc_jump_taken_if_id;
+    // --- IF/ID Stage ---
+    reg [`DATA_WIDTH-1:0] pc_if_id;
+    reg [`DATA_WIDTH-1:0] instruction_if_id;
+    reg                           pc_jump_taken_if_id;
 
-    // ID/EXE Stage
-    //reg [`DATA_WIDTH-1:0] pc_id_exe;
-    reg [4:0]             rd_id_exe;
-    reg [`REG_ADDR_WIDTH-1:0] rs1_id_exe;
-    reg [`REG_ADDR_WIDTH-1:0] rs2_id_exe;
-    //reg [`DATA_WIDTH-1:0] immediate_id_exe;
-    reg [`DATA_WIDTH-1:0] rs1_data_id_exe;
-    reg [`DATA_WIDTH-1:0] rs2_data_id_exe;
-    reg                   wb_we_id_exe;
-    reg                   wb_sel_input_id_exe;
-    reg                   mem_we_id_exe;
-    reg                   mem_re_id_exe;
-    reg [1:0]             mem_dim_id_exe;
-    reg                   mem_sig_id_exe;
-    reg [3:0]             ALUOp_id_exe;
-    reg                   ALUIn1_id_exe;
-    reg                   ALUIn2_id_exe;
-    reg                   EXEOut_id_exe;
+    // --- ID/EXE Stage ---
+    reg [`DATA_WIDTH-1:0] pc_id_exe;
+    reg [`DATA_WIDTH-1:0] immediate_id_exe;
+    reg [`REG_ADDR_WIDTH-1:0]     rd_id_exe;
+    reg [`REG_ADDR_WIDTH-1:0]     rs1_id_exe;
+    reg [`REG_ADDR_WIDTH-1:0]     rs2_id_exe;
+    reg [`DATA_WIDTH-1:0]         rs1_data_id_exe;
+    reg [`DATA_WIDTH-1:0]         rs2_data_id_exe;
+    reg                           wb_we_id_exe;
+    reg                           wb_sel_input_id_exe;
+    reg                           mem_we_id_exe;
+    reg                           mem_re_id_exe;
+    reg [1:0]                     mem_dim_id_exe;
+    reg                           mem_sig_id_exe;
+    reg [3:0]                     ALUOp_id_exe;
+    reg                           ALUIn1_id_exe;
+    reg                           ALUIn2_id_exe;
+    reg                           EXEOut_id_exe;
 
-    // EXE/MEM Stage
-    reg [4:0]             rd_exe_mem;
-    reg [4:0]             rs2_exe_mem;
-    reg [`DATA_WIDTH-1:0] rs2_data_exe_mem;
-    reg                   wb_we_exe_mem;
-    reg                   wb_sel_input_exe_mem;
-    reg                   mem_we_exe_mem;
-    reg                   mem_re_exe_mem;
-    reg [1:0]             mem_dim_exe_mem;
-    reg                   mem_sig_exe_mem;
-    reg [`DATA_WIDTH-1:0] eo_data_exe_mem;
+    // --- EXE/MEM Stage ---
+    reg [`REG_ADDR_WIDTH-1:0]     rd_exe_mem;
+    reg [`REG_ADDR_WIDTH-1:0]     rs2_exe_mem;
+    reg [`DATA_WIDTH-1:0]         rs2_data_exe_mem;
+    reg                           wb_we_exe_mem;
+    reg                           wb_sel_input_exe_mem;
+    reg                           mem_we_exe_mem;
+    reg                           mem_re_exe_mem;
+    reg [1:0]                     mem_dim_exe_mem;
+    reg                           mem_sig_exe_mem;
+    reg [`DATA_WIDTH-1:0]         eo_data_exe_mem;
 
-    // MEM/WB Stage
-    reg [4:0]             rd_mem_wb;
-    reg                   wb_we_mem_wb;
-    reg                   wb_sel_input_mem_wb;
-    reg [`DATA_WIDTH-1:0] eo_data_mem_wb;
-    reg [`DATA_WIDTH-1:0] mem_data_mem_wb;
+    // --- MEM/WB Stage ---
+    reg [`REG_ADDR_WIDTH-1:0]     rd_mem_wb;
+    reg                           wb_we_mem_wb;
+    reg                           wb_sel_input_mem_wb;
+    reg [`DATA_WIDTH-1:0]         eo_data_mem_wb;
+    reg [`DATA_WIDTH-1:0]         mem_data_mem_wb;
 
     // ========================================================================
     // Stage Wires Declarations
     // ========================================================================
 
-    // IF Outputs
-    wire [`DATA_WIDTH-1:0] if_pc_out;
-    wire [`DATA_WIDTH-1:0] if_instruction;
-    //wire                   if_pc_jump_taken;
+    // --- IF Outputs ---
+    wire [`DATA_WIDTH-1:0]        if_pc_out;
+    wire [`DATA_WIDTH-1:0]        if_instruction;
+    wire                       if_pc_jump_taken;
     
-    // ID Outputs
-    wire [4:0]             id_rd;
-    wire [4:0]             id_rs1;
-    wire [4:0]             id_rs2;
-    wire [`DATA_WIDTH-1:0] id_immediate;
-    wire [`DATA_WIDTH-1:0] id_rs1_data;
-    wire [`DATA_WIDTH-1:0] id_rs2_data;
-    wire                   id_wb_we;
-    wire                   id_wb_sel_input;
-    wire                   id_mem_we;
-    wire                   id_mem_re;
-    wire [1:0]             id_mem_dim;
-    wire                   id_mem_sig;
-    wire [3:0]             id_ALUOp;
-    wire                   id_ALUIn1;
-    wire                   id_ALUIn2;
-    wire                   id_EXEOut;
+    // --- ID Outputs ---
+    wire [`REG_ADDR_WIDTH-1:0]    id_rd;
+    wire [`REG_ADDR_WIDTH-1:0]    id_rs1;
+    wire [`REG_ADDR_WIDTH-1:0]    id_rs2;
+    wire [`DATA_WIDTH-1:0]        id_immediate;
+    wire [`DATA_WIDTH-1:0]        id_rs1_data;
+    wire [`DATA_WIDTH-1:0]        id_rs2_data;
+    wire                          id_wb_we;
+    wire                          id_wb_sel_input;
+    wire                          id_mem_we;
+    wire                          id_mem_re;
+    wire [1:0]                    id_mem_dim;
+    wire                          id_mem_sig;
+    wire [`ALU_CNTR_WIDTH-1:0]    id_ALUOp;
+    wire                          id_ALUIn1;
+    wire                          id_ALUIn2;
+    wire                          id_EXEOut;
     
-    // ID Control / Hazard Outputs
-    
-    //wire                   id_stall;
-    //wire [1:0]             id_pc_sel;
-    wire                   id_flush_if_id;
-    wire                   id_flush_id_exe_branch;
-    wire                   id_flush_id_exe_hazard;
+    // --- ID Control / Hazard Outputs ---
+    wire                       id_stall;
+    wire [1:0]                 id_pc_sel;
+    wire                       id_branch_taken;
+    wire                          id_flush_if_id;
+    wire                          id_flush_id_exe_branch;
+    wire                          id_flush_id_exe_hazard;
 
-    // EXE Outputs
-    wire [`DATA_WIDTH-1:0] exe_rs2_data_out;
-    wire [`DATA_WIDTH-1:0] exe_eo_data;
+    // --- EXE Outputs ---
+    wire [`DATA_WIDTH-1:0]        exe_rs2_data_out;
+    wire [`DATA_WIDTH-1:0]        exe_eo_data;
+    wire [`DATA_WIDTH-1:0]     exe_pc_jump;
     
+    // --- MEM Outputs ---
+    wire [`DATA_WIDTH-1:0]        mem_eo_data_out;
+    wire [`DATA_WIDTH-1:0]        mem_mem_data;
 
-    // MEM Outputs
-    wire [`DATA_WIDTH-1:0] mem_eo_data_out;
-    wire [`DATA_WIDTH-1:0] mem_mem_data;
-
-    // WB Outputs
-    wire [`DATA_WIDTH-1:0] wb_data;
+    // --- WB Outputs ---
+    wire [`DATA_WIDTH-1:0]        wb_data;
 
     // ========================================================================
     // Stages Instantiations
@@ -196,7 +184,7 @@ module CORE (
         .dbg_x7(dbg_x7),
         .dbg_x8(dbg_x8)
     );
-   
+    
     EXE exe_stage (
         // --- input ---
         .pc_in(pc_id_exe),
@@ -205,12 +193,12 @@ module CORE (
         .immediate(immediate_id_exe),
         .rs1_data(rs1_data_id_exe),
         .rs2_data(rs2_data_id_exe),
-   
+    
         .ALUOp(ALUOp_id_exe),
         .ALUIn1(ALUIn1_id_exe),
         .ALUIn2(ALUIn2_id_exe),
         .EXEOut(EXEOut_id_exe),
-   
+    
         .MEM_rd(rd_exe_mem),
         .MEM_mem_re(mem_re_exe_mem),
         .MEM_wb_we(wb_we_exe_mem),
@@ -258,9 +246,7 @@ module CORE (
     // ========================================================================
     // Pipeline Registers Sequential Logic
     // ========================================================================
-
-
-always @(posedge clk) begin
+    always @(posedge clk) begin
         if (rst) begin
             // Reset IF/ID
             pc_if_id            <= 0;

@@ -3,15 +3,15 @@
 `include "RISC-V.vh"
 
 module HAZARD_CONTROL_UNIT(
-    input wire clk, // CPU clock
-    input wire rst, // Synchronous reset (active high)
+    input wire clk,
+    input wire rst,
 
-    input wire [`OPCODE_WIDTH-1:0] opcode, // Opcode of instruction in ID
-    input wire [`REG_ADDR_WIDTH-1:0] rs1,   // rs1 of instruction in ID
-    input wire [`REG_ADDR_WIDTH-1:0] rs2,   // rs2 of instruction in ID
+    input wire [`OPCODE_WIDTH-1:0] opcode,
+    input wire [`REG_ADDR_WIDTH-1:0] rs1,
+    input wire [`REG_ADDR_WIDTH-1:0] rs2,
 
-    input wire [`REG_ADDR_WIDTH-1:0] EXE_rd, // Destination register in EXE
-    input wire [`REG_ADDR_WIDTH-1:0] MEM_rd, // Destination register in MEM
+    input wire [`REG_ADDR_WIDTH-1:0] EXE_rd,
+    input wire [`REG_ADDR_WIDTH-1:0] MEM_rd,
 
     output reg flush_id_exe_hazard, // Reset ID/EXE register (insert NOP/bubble)
     output reg stall                // Stall PC and IF/ID registers
@@ -23,9 +23,6 @@ module HAZARD_CONTROL_UNIT(
     reg [`OPCODE_WIDTH-1:0] opcode_exe; 
     reg [`OPCODE_WIDTH-1:0] opcode_mem; 
 
-    // ------------------------------------------------------------
-    // Decode: Does the ID instruction read rs1 / rs2?
-    // ------------------------------------------------------------
     wire id_reads_rs1;
     wire id_reads_rs2;
 
@@ -42,9 +39,6 @@ module HAZARD_CONTROL_UNIT(
         (opcode == `STYPE)  ||
         (opcode == `BTYPE);
 
-    // ------------------------------------------------------------
-    // Decode: Does the EXE/MEM instruction write to rd?
-    // ------------------------------------------------------------
     wire exe_writes_rd;
     wire mem_writes_rd;
 
@@ -73,6 +67,12 @@ module HAZARD_CONTROL_UNIT(
     // ------------------------------------------------------------
     wire exe_is_load;
     assign exe_is_load = (opcode_exe == `ITYPE2);
+    
+    wire mem_is_load;
+    assign mem_is_load = (opcode_mem == `ITYPE2);
+    
+    wire id_is_branch;
+    assign id_is_branch = (opcode == `BTYPE);
 
     wire hazard_load_use;
     assign hazard_load_use =
@@ -81,22 +81,25 @@ module HAZARD_CONTROL_UNIT(
         (
             (id_reads_rs1 && (rs1 == EXE_rd)) ||
             (id_reads_rs2 && (rs2 == EXE_rd))
+        ) ||
+        (
+            mem_is_load && 
+            id_is_branch && 
+            (MEM_rd != `ZEROREG) && 
+            ((rs1 == MEM_rd) || (rs2 == MEM_rd))
         );
 
     // ------------------------------------------------------------
     // 2. Branch Hazard Detection (Data Dependency)
     // If there is a branch instruction in ID, and the instruction in
-    // EXE or MEM is writing to the registers the branch needs to compare,
+    // EXE is writing to the registers the branch needs to compare,
     // we must stall to allow the write-back to complete or forward.
     // ------------------------------------------------------------
-    wire id_is_branch;
-    assign id_is_branch = (opcode == `BTYPE);
 
     wire hazard_branch;
     assign hazard_branch = 
         id_is_branch && (
-            (exe_writes_rd && (EXE_rd != `ZEROREG) && ((rs1 == EXE_rd) || (rs2 == EXE_rd))) ||
-            (mem_writes_rd && (MEM_rd != `ZEROREG) && ((rs1 == MEM_rd) || (rs2 == MEM_rd)))
+            (exe_writes_rd && (EXE_rd != `ZEROREG) && ((rs1 == EXE_rd) || (rs2 == EXE_rd)))
         );
 
     // ------------------------------------------------------------
