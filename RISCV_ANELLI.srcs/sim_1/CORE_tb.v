@@ -49,7 +49,8 @@ module CORE_tb();
         @(posedge clk);
         #1;
         
-        #500;              
+        #400;
+        $finish;              
     end
 
 endmodule
