@@ -1,0 +1,2 @@
+# RISC-V Pipelined CPU (RV32I)
+A 5-stage pipelined processor written in Verilog, featuring a Forwarding Unit, Hazard Detection, and Branch Prediction.
